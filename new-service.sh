@@ -60,7 +60,6 @@ fi
 
 if [ $enableLocalDB = "false" ]; then
     sed -i '' "s,ENABLE_OFFLINE_DYNAMO=true,ENABLE_OFFLINE_DYNAMO=false,g" .env.dev
-    sed -i '' "s,- serverless-dynamodb-local,#- serverless-dynamodb-local,g" serverless.yml
 fi
 
 if ! command -v nvm; then
@@ -71,6 +70,7 @@ if ! command -v nvm; then
     echo ""
     echo "#####"
     echo ""
+    exit;
 else
     nvm use 13
     if [ ! -x "$(command -v npm)" ]; then
@@ -82,8 +82,26 @@ else
         echo "#####"
         echo ""
     else
+
+        echo ""
+        echo "Running NPM Install..."
+        echo ""
         npm install
+
+        if [ $enable_local_db = "y" ]; then
+            echo ""
+            echo "Installing dynamodb local plugin..."
+            echo ""
+            sls dynamodb install
+        fi
     fi
+fi
+
+if [ ! -x "$(command -v sg)" ]; then
+    echo ""
+    echo "Installing seng generator..."
+    npm install -g seng-generator
+    echo ""
 fi
 
 echo ""
@@ -98,10 +116,19 @@ if [ $awsKeyIssue = "true" ]; then
     echo ""
     echo "P.S. You will have to setup service .env.dev yourself"
 fi
+echo ""
+echo ""
+echo "### NOTE use seng generator wizard in service folder to setup Stack/Function templates ###"
+echo ""
+echo ""
 if [ $enableLocalDB = "true" ]; then
     echo ""
-    echo "Local DynamoDB has been enabled, see service README for more info"
+    echo "Local DynamoDB plugin has been installed and enabled, see service README for more info:"
     echo ""
+    echo "Run serverless command 'dynamodb start' to start local db"
+    echo "Add '--migrate' param to start and import local data"
+    echo ""
+    echo "Setup local DB data sources in stack/db/dynamodb-local/custom-variables.yml"
 fi
 echo ""
 echo "#####"
